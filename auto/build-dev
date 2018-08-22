@@ -1,0 +1,9 @@
+#!/bin/bash -eu
+
+cd $(dirname $0)/..
+
+echo "--- Buiding assets"
+auto/dev-environment npm run build
+
+echo "--- Packaging assets"
+mkdir -p artifact && tar -zcvf artifact/build-dev.tar.gz build

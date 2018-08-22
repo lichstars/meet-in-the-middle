@@ -1,0 +1,13 @@
+#!/bin/bash -eu
+
+cd $(dirname $0)/..
+
+echo "--- Buiding assets"
+auto/dev-environment npm run build
+
+echo "--- Delete .map files"
+rm build/static/js/*.map
+rm build/static/css/*.map
+
+echo "--- Packaging assets"
+mkdir -p artifact && tar -zcvf artifact/build-prod.tar.gz build

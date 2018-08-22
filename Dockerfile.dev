@@ -1,0 +1,6 @@
+FROM node:7.10
+
+RUN yarn global add nsp
+
+RUN mkdir /work
+WORKDIR /work

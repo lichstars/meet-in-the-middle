@@ -1,0 +1,19 @@
+version: '2'
+
+volumes:
+  middy-npm-cache:
+    external: true
+
+services:
+  dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    environment:
+      CI:
+    command: npm start
+    volumes:
+      - .:/work
+      - middy-npm-cache:/work/node_modules
+    ports:
+      - "3000:3000"
