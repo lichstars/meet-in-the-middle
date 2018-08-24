@@ -1,37 +1,51 @@
 import {
   ADD_LOCATION,
   REMOVE_LOCATION,
-  SET_MIDPOINT_ID,
+  SET_MIDPOINT_BOUNDS,
+  ADD_PLACE,
+  RESET_PLACES,
 } from './actions';
 
 const defaultState = {
   locations: [],
-  id: 0,
-  midpointId: -1,
+  midpointBounds: null,
+  places: [],
 };
 
 const reducer = (state = defaultState, action) => {
   switch (action.type) {
 
     case ADD_LOCATION: {
-      const id = state.id + 1;
       const locations = Array.from(state.locations);
 
       locations.push(action.location);
 
-      return Object.assign({}, state, { locations, id });
+      return Object.assign({}, state, { locations });
     }
 
-    case SET_MIDPOINT_ID: {
-      const id = state.id;
-      return Object.assign({}, state, { midpointId: id });
+    case ADD_PLACE: {
+      const places = Array.from(state.places);
+
+      places.push(action.place);
+
+      return Object.assign({}, state, { places });
+    }
+
+    case RESET_PLACES: {
+      return Object.assign({}, state, { places: [] });
+    }
+
+    case SET_MIDPOINT_BOUNDS: {
+      return Object.assign({}, state, { midpointBounds: action.bounds });
     }
 
     case REMOVE_LOCATION: {
       const locations = Array.from(state.locations);
 
-      if (action.id > -1) {
-        locations.splice(action.id, 1);
+      const index = locations.indexOf(action.item);
+
+      if (index > -1) {
+        locations.splice(index, 1);
       }
 
       return Object.assign({}, state, { locations });

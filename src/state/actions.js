@@ -6,105 +6,178 @@ import {
 
 import {
   createLatLng,
-  drawMiddleTarget,
+  drawMidpointRings,
   fitAllMarkers,
   addGoogleMarker,
   addMapInfoWindow,
+  zoomToBound,
+  zoomToLatLng,
+  removeMapMarker,
 } from '../services/google-maps';
 
+import {
+  searchGooglePlaces,
+  addPlaceMarker,
+  getPlaceDetails,
+  addPlaceInfoWindow,
+} from '../services/google-places';
+
 import { findMidpoint } from '../services/midpoint';
+import { RADIUS } from '../constants/maps';
 
 const MIDPOINT_NAME = 'MIDPOINT';
 
 export const ADD_LOCATION = 'ADD_LOCATION';
 export const addLocation = (location) => ({ type: ADD_LOCATION, location });
 
-export const SET_MIDPOINT_ID = 'SET_MIDPOINT_ID';
-export const resetMidpointId = () => ({ type: SET_MIDPOINT_ID });
+export const ADD_PLACE = 'ADD_PLACE';
+export const addPlace = (place) => ({ type: ADD_PLACE, place });
+
+export const RESET_PLACES = 'RESET_PLACES';
+export const resetPlaces = () => ({ type: RESET_PLACES });
 
 export const REMOVE_LOCATION = 'REMOVE_LOCATION';
-export const removeLocation = (id) => ({ type: REMOVE_LOCATION, id });
+export const removeLocation = (item) => ({ type: REMOVE_LOCATION, item });
+
+export const SET_MIDPOINT_BOUNDS = 'SET_MIDPOINT_BOUNDS';
+export const setMidpointBounds = (bounds) => ({ type: SET_MIDPOINT_BOUNDS, bounds });
 
 export const addFriend = (name, address) => (dispatch, getState) => {
   findLocationByAddress(name, address)
-    .then(location => dispatch(addMapMarker(location)))
-    .then(details => dispatch(saveLocation(details)))
+    .then(location => dispatch(saveAndMarkLocation(location)))
     .then(() => findMidpoint(getState().app.locations))
     .then(midpointLatLng => dispatch(addMidpoint(midpointLatLng)));
 };
 
 const addMidpoint = (midpointLatLng) => (dispatch, getState) => {
-  const startingRadius = 0;
   const name = MIDPOINT_NAME;
-  const resetMidpoint = true;
+  const isMidpoint = true;
 
   midpointLatLng && findLocationByLatLng(name, midpointLatLng)
-    .then(location => dispatch(addMapMarker(location)))
-    .then(details => dispatch(saveLocation(details, resetMidpoint)))
-    .then(() => drawMiddleTarget(startingRadius, getState().app.locations, getState().app.midpointId))
+    .then(location => dispatch(saveAndMarkLocation(location, isMidpoint)))
+    .then(() => drawMidpointRings(getMidpointLocation(getState().app.locations)))
+    .then((midpointBounds) => dispatch(setMidpointBounds(midpointBounds)))
     .then(() => fitAllMarkers(getState().app.locations));
 };
 
 export const addCurrentLocation = () => (dispatch) => {
   findCurrentLocation()
     .then(latlng => findLocationByLatLng('You', latlng))
-    .then(location => dispatch(addMapMarker(location)))
-    .then(details => dispatch(saveLocation(details)));
+    .then(location => dispatch(saveAndMarkLocation(location)));
 };
 
-const saveLocation = (details, resetMidpoint = false) => (dispatch, getState) => {
-  if (resetMidpoint) {
-    dispatch(removeMapMarker(getState().app.midpointId));
-    dispatch(removeLocation(getState().app.midpointId));
-    dispatch(resetMidpointId());
+export const searchPlaces = () => (dispatch, getState) => {
+  const midpoint = getMidpointLocation(getState().app.locations);
+  const types = ['restaurant'];
+
+  dispatch(clearPreviousSearchResults());
+
+  searchGooglePlaces(types, midpoint, RADIUS)
+    .then((places) => {
+      dispatch(saveAndMapPlaces(places));
+    });
+};
+
+const resetMidpointOnMap = () => (dispatch, getState) => {
+  const midpoint = getMidpointLocation(getState().app.locations);
+
+  if (midpoint) {
+    removeMapMarker(midpoint);
+    dispatch(clearPreviousSearchResults());
+    dispatch(removeLocation(midpoint));
+  }
+};
+
+const saveAndMarkLocation = (location, isMidpoint = false) => (dispatch, getState) => {
+  const id = getState().app.locations.length;
+
+  if (isMidpoint) {
+    dispatch(resetMidpointOnMap());
   }
 
+  const latitude = location.latitude;
+  const longitude = location.longitude;
+  const address = location.addresses[0].formatted_address;
+  const marker = addGoogleMarker(latitude, longitude, id, getState);
+  const infoWindowContent = `<div>${location.name}<br />${address}</div>`;
+  const infoWindow = addMapInfoWindow(marker, infoWindowContent, getState);
+
   const item = {
-    marker: details.marker,
-    infoWindowContent: details.infoWindowContent,
-    infoWindow: details.infoWindow,
-    name: details.location.name,
-    latitude: details.location.latitude,
-    longitude: details.location.longitude,
-    address: details.location.addresses[0].formatted_address,
+    marker: marker,
+    infoWindowContent: infoWindowContent,
+    infoWindow: infoWindow,
+    name: location.name,
+    latitude: location.latitude,
+    longitude: location.longitude,
+    address: location.addresses[0].formatted_address,
     windowOpen: false,
-    latLngObject: createLatLng(details.location.latitude, details.location.longitude),
-    id: getState().app.id,
+    latLngObject: createLatLng(location.latitude, location.longitude),
+    id: id,
+    isMidpoint: isMidpoint,
   };
 
   dispatch(addLocation(item));
 };
 
-const addMapMarker = (location) => (dispatch, getState) => {
-  const latitude = location.latitude;
-  const longitude = location.longitude;
-  const address = location.addresses[0].formatted_address;
-  // const suburb = location.addresses[0].address_components[1].long_name;
+const saveAndMapPlaces = (places) => (dispatch, getState) => {
+  places.forEach((place, id) => {
+    getPlaceDetails(place).then(details => {
+      const marker = addPlaceMarker(place.geometry.location, id, getState);
+      const content = `<div>${place.name}</div>`;
+      const infoWindow = addPlaceInfoWindow(marker, content, getState);
 
-  const marker = addGoogleMarker(latitude, longitude, getState().app.id, getState);
+      const aPlace = {
+        id: id,
+        place: place,
+        marker: marker,
+        location: place.geometry.location,
+        details: details,
+        windowOpen: false,
+        clicked: false,
+        infoWindowContent: content,
+        infoWindow: infoWindow,
+      };
 
-  const infoWindowContent = `<div>${location.name}<br />${address}</div>`;
-  const infoWindow = addMapInfoWindow(marker, infoWindowContent, getState);
-
-  return {
-    marker,
-    infoWindowContent,
-    infoWindow,
-    location,
-  };
+      dispatch(addPlace(aPlace));
+    });
+  });
 };
 
-const removeMapMarker = (id) => (dispatch, getState) => {
-  const store = getState().app.locations;
-  if (id > -1) {
-    store[id]["marker"].setMap(null);
-  }
+const clearPreviousSearchResults = () => (dispatch, getState) => {
+  getState().app.places.forEach(place => {
+    removeMapMarker(place);
+  });
+
+  dispatch(resetPlaces());
+};
+
+export const removeAndRecalculate = (location) => (dispatch, getState) => {
+  dispatch(removeLocation(location));
+  dispatch(resetMidpointOnMap());
+  findMidpoint(getState().app.locations)
+    .then(midpointLatLng => dispatch(addMidpoint(midpointLatLng)));
 };
 
 export const getLocationById = (id, locations) => {
-  for (let index=0; index<locations.length; index++) {
-    if (locations[index]["id"] === id) {
-      return locations[index];
-    }
+  const results = locations.filter(location => location.id === id);
+  if (results.length > 0) {
+    return results[0];
   }
+  return null;
+};
+
+export const getMidpointLocation = (locations) => {
+  const midpointArray = locations.filter(location => location.isMidpoint === true);
+  if (midpointArray.length > 0) {
+    return midpointArray[0];
+  }
+  return null;
+};
+
+export const zoomToMidpoint = () => (dispatch, getState) => {
+  zoomToBound(getState().app.midpointBounds);
+};
+
+export const zoomToLocation = (location) => {
+  zoomToLatLng(location);
 };

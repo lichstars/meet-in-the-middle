@@ -1,13 +1,30 @@
 import React, { Component } from 'react';
 import styled from 'styled-components';
-import { Grid, Row, Col } from 'react-bootstrap';
-import Friends from './components/Friends';
+import AddFriend from './components/AddFriend';
 import FriendList from './components/FriendList';
-import Activities from './components/Activities';
+import Places from './components/Places';
 import { setupMap } from './services/google-maps';
 
+const Container = styled.div`
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: row;
+`;
+
+const SidePanel = styled.div`
+  padding: 16px 8px;
+  background: rgba(255,255,255,0.5);
+  min-width: 400px;
+`;
+
+const MapContainer = styled.div`
+  width: 100%;
+  height: 100%;
+`;
+
 const Map = styled.div`
-  height: 800px;
+  height: -webkit-fill-available;
 `;
 
 class App extends Component {
@@ -17,20 +34,16 @@ class App extends Component {
 
   render() {
     return (
-      <Grid>
-        <Row>
-          <Col xs={ 12 } sm={ 6 }>
-            Friends
-            <Friends />
-            <FriendList />
-            <Activities />
-          </Col>
-          <Col xs={ 12 } sm={ 6 }>
-            Map
-            <Map id="map" />
-          </Col>
-        </Row>
-      </Grid>
+      <Container>
+        <SidePanel>
+          <AddFriend />
+          <FriendList />
+          <Places />
+        </SidePanel>
+        <MapContainer>
+          <Map id="map" />
+        </MapContainer>
+      </Container>
     );
   }
 }

@@ -11,6 +11,8 @@ export const googleTravelMode = google.maps.DirectionsTravelMode;
 export const googleUnitSystem = google.maps.UnitSystem;
 export const googleDirectionStatus = google.maps.DirectionsStatus;
 export const googleGeocoderStatus = google.maps.GeocoderStatus;
+export const googlePlacesServiceStatus = google.maps.places.PlacesServiceStatus;
+export let googlePlacesService;
 export let googleMap;
 
 let redRings;
@@ -109,6 +111,8 @@ export const setupMap = (address) => {
 
       googleMap = new google.maps.Map(document.getElementById("map"), mapOptions);
 
+      googlePlacesService = new google.maps.places.PlacesService(googleMap);
+
       const styledMapOptions = { name: 'map' };
 
       const customMapType = new google.maps.StyledMapType(featureOpts, styledMapOptions);
@@ -136,11 +140,11 @@ export const addGoogleMarker = (lat, lng, index, getState) => {
 const addMapMarkerListener = (marker, getState) => {
   marker.addListener('mouseover', () => {
     const item = getLocationById(marker.infoWindowIndex, getState().app.locations);
-    const infoWindow = item["infoWindow"];
+    const infoWindow = item.infoWindow;
 
-    if (item["windowOpen"] === false) {
+    if (item.windowOpen === false) {
       infoWindow.open(googleMap, marker);
-      item["windowOpen"] = true;
+      item.windowOpen = true;
     }
   });
 };
@@ -155,20 +159,22 @@ export const addMapInfoWindow = (marker, content, getState) => {
 
 const addInfoWindowListener = (infoWindow, marker, getState) => {
   infoWindow.addListener('closeclick', () => {
-    const index = marker.infoWindowIndex;
-    getState().app.locations[index]["windowOpen"] = false;
+    const item = getLocationById(marker.infoWindowIndex, getState().app.locations);
+    item.windowOpen = false;
     infoWindow.close();
   });
 };
 
-export const drawMiddleTarget = (factor, store, midpointIndex) => {
-  const blueRingRadius = ((RADIUS + factor)*3.5);
-  const redRingRadius = (RADIUS + factor) ;
-  const whiteRingRadius = ((RADIUS + factor) *2);
+let redRings;
+let blueRings;
+let whiteRings;
+
+export const drawMidpointRings = (midpoint, radius = 0) => {
+  const blueRingRadius = (RADIUS + radius) * 3.5;
+  const redRingRadius = RADIUS + radius;
+  const whiteRingRadius = (RADIUS + radius) * 2;
 
   clearCircles();
-
-  const midpoint = getLocationById(midpointIndex, store);
 
   blueRings = createCircle(blueRingRadius, midpoint.latLngObject, googleMap, 'cornflowerblue', 0.4);
   whiteRings = createCircle(whiteRingRadius, midpoint.latLngObject, googleMap, 'white', 0.4);
@@ -178,7 +184,7 @@ export const drawMiddleTarget = (factor, store, midpointIndex) => {
   whiteRings.setMap(googleMap);
   redRings.setMap(googleMap);
 
-  googleMap.fitBounds(blueRings.getBounds());
+  return blueRings.getBounds();
 };
 
 const clearCircles = () => {
@@ -208,13 +214,25 @@ const createCircle = (radius, latlng, map, color, fillOpacity) => {
   });
 };
 
-export const fitAllMarkers = (store) => {
+export const fitAllMarkers = (locations) => {
   const bounds = new google.maps.LatLngBounds();
 
-  for (let i = 0, LtLgLen = store.length; i < LtLgLen; i++) {
-    bounds.extend(store[i]["latLngObject"]);
-  }
+  locations.forEach(location => bounds.extend(location.latLngObject));
 
+  zoomToBound(bounds);
+};
+
+export const removeMapMarker = (item) => {
+  item.marker.setMap(null);
+};
+
+export const zoomToBound = (point) => {
+  googleMap.fitBounds(point);
+};
+
+export const zoomToLatLng = (location) => {
+  const bounds = new google.maps.LatLngBounds();
+  bounds.extend(location.latLngObject);
   googleMap.fitBounds(bounds);
 };
 
