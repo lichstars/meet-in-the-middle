@@ -1,17 +1,36 @@
 import React, { Component } from 'react';
-import './App.css';
+import styled from 'styled-components';
+import { Grid, Row, Col } from 'react-bootstrap';
+import Friends from './components/Friends';
+import FriendList from './components/FriendList';
+import Activities from './components/Activities';
+import { setupMap } from './services/google-maps';
+
+const Map = styled.div`
+  height: 800px;
+`;
 
 class App extends Component {
+  componentDidMount() {
+    setupMap('Melbourne, Australia');
+  }
+
   render() {
     return (
-      <div className="App">
-        <header className="App-header">
-          <h1 className="App-title">Welcome to React</h1>
-        </header>
-        <p className="App-intro">
-          To get started, edit <code>src/App.js</code> and save to reload.
-        </p>
-      </div>
+      <Grid>
+        <Row>
+          <Col xs={ 12 } sm={ 6 }>
+            Friends
+            <Friends />
+            <FriendList />
+            <Activities />
+          </Col>
+          <Col xs={ 12 } sm={ 6 }>
+            Map
+            <Map id="map" />
+          </Col>
+        </Row>
+      </Grid>
     );
   }
 }
