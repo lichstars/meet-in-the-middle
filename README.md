@@ -6,6 +6,9 @@ It is now, a single page web application built in ReactJs that plots your friend
 
 This app heavily depends on Google APIs.
 
+## Screenshot
+![screenshot](https://github.com/lichstars/meet-in-the-middle/blob/master/screenshot/app.png)
+
 
 ## Links
 - [Google API starting point](https://developers.google.com/maps/documentation/javascript/tutorial)
