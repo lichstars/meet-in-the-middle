@@ -3,6 +3,7 @@ import { connect } from 'react-redux';
 import styled from 'styled-components';
 import { Button, FormControl } from 'react-bootstrap';
 import { addFriend, addCurrentLocation } from '../state/actions';
+import { addressAutoComplete } from '../services/google-maps';
 
 const Container = styled.div`
   padding-bottom: 16px;
@@ -36,10 +37,10 @@ class AddFriend extends Component {
   render () {
     return (
       <Container>
-        <p><Button block onClick={ this.addMyLocation }>Add my location</Button></p>
+        <p><Button block={ true } onClick={ this.addMyLocation }>Add my location</Button></p>
         <p><FormControl type="text" onBlur={ this.setName } placeholder="Name" /></p>
-        <p><FormControl type="text" onBlur={ this.setLocation } placeholder="Address" /></p>
-        <Button block onClick={ this.handleSubmit }>Add friend</Button>
+        <p><FormControl id="formAddress" type="text" placeholder="Address" onFocus={ addressAutoComplete } onBlur={ this.setLocation } /></p>
+        <Button block={ true } onClick={ this.handleSubmit }>Add friend</Button>
       </Container>
     );
   }

@@ -15,9 +15,9 @@ export const googlePlacesServiceStatus = google.maps.places.PlacesServiceStatus;
 export let googlePlacesService;
 export let googleMap;
 
-let redRings;
-let blueRings;
-let whiteRings;
+export const addressAutoComplete = () => {
+  new google.maps.places.Autocomplete((document.getElementById('formAddress')),{ types: ['geocode'] });
+};
 
 google.maps.Polyline.prototype.GetPointAtDistance = (metres) => {
   if (metres === 0)
