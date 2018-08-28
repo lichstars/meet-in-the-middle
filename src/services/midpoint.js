@@ -12,7 +12,7 @@ import {
 
 export const findMidpoint = (store) => {
   if (!store || store.length < 2)
-    return;
+    return {};
 
   resetDrawnRoutes();
 
@@ -167,7 +167,7 @@ const drawDrivingRoute = (store, routeDetails) => {
 };
 /*eslint-enable max-depth*/
 
-const resetDrawnRoutes = () => {
+export const resetDrawnRoutes = () => {
   if (googlePolyline) {
     googlePolyline.setPath([]);
     googlePolyline.visible = false;

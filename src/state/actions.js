@@ -13,6 +13,7 @@ import {
   zoomToBound,
   zoomToLatLng,
   removeMapMarker,
+  resetMidpointRings,
 } from '../services/google-maps';
 
 import {
@@ -22,7 +23,7 @@ import {
   addPlaceInfoWindow,
 } from '../services/google-places';
 
-import { findMidpoint } from '../services/midpoint';
+import { findMidpoint, resetDrawnRoutes } from '../services/midpoint';
 import { RADIUS } from '../constants/maps';
 
 const MIDPOINT_NAME = 'MIDPOINT';
@@ -53,7 +54,7 @@ const addMidpoint = (midpointLatLng) => (dispatch, getState) => {
   const name = MIDPOINT_NAME;
   const isMidpoint = true;
 
-  midpointLatLng && findLocationByLatLng(name, midpointLatLng)
+  Object.keys(midpointLatLng).length > 0 && findLocationByLatLng(name, midpointLatLng)
     .then(location => dispatch(saveAndMarkLocation(location, isMidpoint)))
     .then(() => drawMidpointRings(getMidpointLocation(getState().app.locations)))
     .then((midpointBounds) => dispatch(setMidpointBounds(midpointBounds)))
@@ -152,10 +153,19 @@ const clearPreviousSearchResults = () => (dispatch, getState) => {
 };
 
 export const removeAndRecalculate = (location) => (dispatch, getState) => {
+  removeMapMarker(location);
   dispatch(removeLocation(location));
+
   dispatch(resetMidpointOnMap());
-  findMidpoint(getState().app.locations)
-    .then(midpointLatLng => dispatch(addMidpoint(midpointLatLng)));
+
+  resetDrawnRoutes();
+
+  resetMidpointRings();
+
+  if (getState().app.locations.length > 1) {
+    findMidpoint(getState().app.locations)
+      .then(midpointLatLng => dispatch(addMidpoint(midpointLatLng)))
+  }
 };
 
 export const getLocationById = (id, locations) => {

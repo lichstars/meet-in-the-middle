@@ -174,7 +174,7 @@ export const drawMidpointRings = (midpoint, radius = 0) => {
   const redRingRadius = RADIUS + radius;
   const whiteRingRadius = (RADIUS + radius) * 2;
 
-  clearCircles();
+  resetMidpointRings();
 
   blueRings = createCircle(blueRingRadius, midpoint.latLngObject, googleMap, 'cornflowerblue', 0.4);
   whiteRings = createCircle(whiteRingRadius, midpoint.latLngObject, googleMap, 'white', 0.4);
@@ -187,7 +187,7 @@ export const drawMidpointRings = (midpoint, radius = 0) => {
   return blueRings.getBounds();
 };
 
-const clearCircles = () => {
+export const resetMidpointRings = () => {
   if (redRings !== undefined && redRings !== null) {
     redRings.setMap(null);
   }
