@@ -21,6 +21,12 @@ Install the following software:
 - Git: https://git-scm.com
 - Docker: https://www.docker.com
 - Requires a [Google API Key](https://developers.google.com/maps/documentation/javascript/get-api-key) and plugged into `index.html`
+- Require the following Google APIs
+  - Directions API
+  - Distance Matrix API
+  - Geocoding API
+  - Maps JavaScript API
+  - Places API
 
 ## Development
 
@@ -48,21 +54,21 @@ It can be built, tested and run, with or without docker.
 #### Without Docker
 - Dependencies
     - Node
-    - Yarn
+    - NPM
 
 
 - Install dependencies
-    - `yarn install`
+    - `npm install`
 
 
 - Build
-    - `yarn run build`
+    - `npm run build`
 
 
 - Start a local development server
-    - `yarn start`
+    - `npm start`
     - Navigate to http://localhost:3000
 
 
 - Run the tests
-    - `yarn test`
+    - `npm test`

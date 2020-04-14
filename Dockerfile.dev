@@ -1,6 +1,6 @@
-FROM node:7.10
+FROM node:10-alpine AS alpine
 
-RUN yarn global add nsp
+RUN npm global add nsp
 
 RUN mkdir /work
 WORKDIR /work
